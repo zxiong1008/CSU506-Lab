@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # Python API Service
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: csu506-project2-api
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./api:/app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/project2/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # React Frontend Service (optional)
+  frontend:
+    build:
+      context: ./csu506-app
+      dockerfile: Dockerfile.frontend
+    container_name: csu506-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    restart: unless-stopped
