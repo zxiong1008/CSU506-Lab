@@ -1,11 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import time
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Callable
 
 app = FastAPI(
-    title="CSU 506 Project 2 API",
-    description="Search Algorithm Comparison API",
+    title="CSU 506 Algorithms API",
+    description="Search and sorting algorithm comparison API",
     version="1.0.0"
 )
 
@@ -125,7 +125,183 @@ def binary_search(array: List[int], target: int) -> Dict[str, Any]:
     }
 
 
-# API Routes with /api/project2 prefix
+# Project 3 sorting algorithms and deterministic dataset generators
+SORTING_SIZES = [1000, 5000, 10000, 50000]
+SORTING_DATASET_TYPES = ["random", "sorted", "reverse", "partial"]
+SORTING_ALGORITHMS = ["bubble", "selection", "insertion", "merge"]
+QUADRATIC_LIMIT_SIZE = 10000
+
+
+def bubble_sort(values: List[float]) -> List[float]:
+    result = values[:]
+    for end in range(len(result) - 1, 0, -1):
+        swapped = False
+        for index in range(end):
+            if result[index] > result[index + 1]:
+                result[index], result[index + 1] = result[index + 1], result[index]
+                swapped = True
+        if not swapped:
+            break
+    return result
+
+
+def selection_sort(values: List[float]) -> List[float]:
+    result = values[:]
+    for start in range(len(result) - 1):
+        minimum = start
+        for index in range(start + 1, len(result)):
+            if result[index] < result[minimum]:
+                minimum = index
+        if minimum != start:
+            result[start], result[minimum] = result[minimum], result[start]
+    return result
+
+
+def insertion_sort(values: List[float]) -> List[float]:
+    result = values[:]
+    for index in range(1, len(result)):
+        current = result[index]
+        position = index - 1
+        while position >= 0 and result[position] > current:
+            result[position + 1] = result[position]
+            position -= 1
+        result[position + 1] = current
+    return result
+
+
+def merge_sort(values: List[float]) -> List[float]:
+    if len(values) < 2:
+        return values[:]
+    midpoint = len(values) // 2
+    left = merge_sort(values[:midpoint])
+    right = merge_sort(values[midpoint:])
+    merged: List[float] = []
+    left_index = right_index = 0
+    while left_index < len(left) and right_index < len(right):
+        if left[left_index] <= right[right_index]:
+            merged.append(left[left_index])
+            left_index += 1
+        else:
+            merged.append(right[right_index])
+            right_index += 1
+    return merged + left[left_index:] + right[right_index:]
+
+
+SORT_FUNCTIONS: Dict[str, Callable[[List[float]], List[float]]] = {
+    "bubble": bubble_sort,
+    "selection": selection_sort,
+    "insertion": insertion_sort,
+    "merge": merge_sort,
+}
+
+
+def generate_sorting_dataset(size: int, dataset_type: str) -> List[float]:
+    values = [((index * 7919 + 104729) % (size * 10)) + index / size for index in range(size)]
+    if dataset_type == "random":
+        for index in range(size - 1, 0, -1):
+            swap_index = (index * 31 + 17) % (index + 1)
+            values[index], values[swap_index] = values[swap_index], values[index]
+        return values
+    ordered = sorted(values)
+    if dataset_type == "sorted":
+        return ordered
+    if dataset_type == "reverse":
+        return list(reversed(ordered))
+    cutoff = int(size * 0.8)
+    for index in range(cutoff, size):
+        swap_index = (index * 13 + 7) % size
+        ordered[index], ordered[swap_index] = ordered[swap_index], ordered[index]
+    return ordered
+
+
+def validate_sorting_inputs(size: int, dataset_type: str, algorithm: str | None = None) -> None:
+    if size < 1 or size > 50000:
+        raise HTTPException(status_code=400, detail="Size must be between 1 and 50000")
+    if dataset_type not in SORTING_DATASET_TYPES:
+        raise HTTPException(status_code=400, detail=f"Dataset type must be one of: {', '.join(SORTING_DATASET_TYPES)}")
+    if algorithm is not None and algorithm not in SORTING_ALGORITHMS:
+        raise HTTPException(status_code=400, detail=f"Algorithm must be one of: {', '.join(SORTING_ALGORITHMS)}")
+
+
+def benchmark_sort(algorithm: str, dataset_type: str, size: int) -> Dict[str, Any]:
+    if size >= QUADRATIC_LIMIT_SIZE and algorithm != "merge":
+        return {
+            "algorithm": algorithm,
+            "dataset": dataset_type,
+            "size": size,
+            "timeMs": None,
+            "status": "limit",
+        }
+    values = generate_sorting_dataset(size, dataset_type)
+    started = time.perf_counter()
+    sorted_values = SORT_FUNCTIONS[algorithm](values)
+    elapsed = (time.perf_counter() - started) * 1000
+    if sorted_values != sorted(values):
+        raise RuntimeError(f"{algorithm} sort returned an invalid result")
+    return {
+        "algorithm": algorithm,
+        "dataset": dataset_type,
+        "size": size,
+        "timeMs": elapsed,
+        "status": "measured",
+    }
+
+
+# API Routes with /api/project2 and /api/project3 prefixes
+
+
+@app.get("/api/project3/health")
+async def sorting_health_check():
+    """Health check endpoint for the Project 3 sorting service."""
+    return {"status": "healthy", "service": "CSU 506 Project 3 Sorting API"}
+
+
+@app.get("/api/project3/dataset/{size}")
+async def get_sorting_dataset(size: int, dataset_type: str = "random"):
+    """Generate one deterministic sorting dataset."""
+    validate_sorting_inputs(size, dataset_type)
+    return {
+        "size": size,
+        "dataset": dataset_type,
+        "elements": generate_sorting_dataset(size, dataset_type),
+    }
+
+
+@app.post("/api/project3/sort")
+async def sort_dataset(algorithm: str, size: int = 1000, dataset_type: str = "random"):
+    """Sort one generated dataset and return its timing and sorted values."""
+    validate_sorting_inputs(size, dataset_type, algorithm)
+    if size >= QUADRATIC_LIMIT_SIZE and algorithm != "merge":
+        return benchmark_sort(algorithm, dataset_type, size)
+    values = generate_sorting_dataset(size, dataset_type)
+    started = time.perf_counter()
+    sorted_values = SORT_FUNCTIONS[algorithm](values)
+    elapsed = (time.perf_counter() - started) * 1000
+    return {
+        "algorithm": algorithm,
+        "dataset": dataset_type,
+        "size": size,
+        "timeMs": elapsed,
+        "status": "measured",
+        "sorted": sorted_values,
+    }
+
+
+@app.get("/api/project3/benchmarks")
+async def run_sorting_benchmarks():
+    """Run the complete 64-case Project 3 benchmark matrix."""
+    results = [
+        benchmark_sort(algorithm, dataset_type, size)
+        for algorithm in SORTING_ALGORITHMS
+        for dataset_type in SORTING_DATASET_TYPES
+        for size in SORTING_SIZES
+    ]
+    return {
+        "algorithms": SORTING_ALGORITHMS,
+        "datasets": SORTING_DATASET_TYPES,
+        "sizes": SORTING_SIZES,
+        "benchmarks": results,
+    }
 
 @app.get("/api/project2/health")
 async def health_check():

@@ -4,6 +4,7 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const API_PROJECT2_URL = `${API_BASE_URL}/api/project2`
+const API_PROJECT3_URL = `${API_BASE_URL}/api/project3`
 
 export interface SearchResult {
   found: boolean
@@ -19,6 +20,14 @@ export interface BenchmarkResult {
   binarySearchTime: number
   binarySearchComparisons: number
   targetValue: number
+}
+
+export interface SortingBenchmarkResult {
+  algorithm: 'bubble' | 'selection' | 'insertion' | 'merge'
+  dataset: 'random' | 'sorted' | 'reverse' | 'partial'
+  size: number
+  timeMs: number | null
+  status: 'measured' | 'limit'
 }
 
 export async function linearSearchAPI(searchValue: number, arraySize: number = 100): Promise<SearchResult> {
@@ -101,4 +110,11 @@ export async function healthCheckAPI(): Promise<boolean> {
     console.error('Health check error:', error)
     return false
   }
+}
+
+export async function runSortingBenchmarksAPI(): Promise<SortingBenchmarkResult[]> {
+  const response = await fetch(`${API_PROJECT3_URL}/benchmarks`)
+  if (!response.ok) throw new Error(`Sorting API Error: ${response.status}`)
+  const data = await response.json()
+  return data.benchmarks
 }

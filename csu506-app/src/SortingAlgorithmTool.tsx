@@ -1,20 +1,17 @@
 import { useMemo, useState } from 'react'
 import './SortingAlgorithmTool.css'
+import { runSortingBenchmarksAPI, type SortingBenchmarkResult } from './apiClient'
 import {
   ALGORITHM_LABELS,
   DATASET_LABELS,
   DATASET_SIZES,
   DATASET_TYPES,
   SORT_ALGORITHMS,
-  SORT_FUNCTIONS,
-  generateDataset,
-  isSorted,
   type DatasetType,
-  type SortAlgorithm,
 } from './sortingUtils'
 
 type SortingAlgorithmToolProps = { onBack: () => void }
-type BenchmarkRow = { algorithm: SortAlgorithm; dataset: DatasetType; size: number; timeMs: number | null; status: 'measured' | 'limit' }
+type BenchmarkRow = SortingBenchmarkResult
 
 const CASE_COUNT = SORT_ALGORITHMS.length * DATASET_TYPES.length * DATASET_SIZES.length
 const LIMIT_MS = 2000
@@ -24,19 +21,6 @@ function formatTime(timeMs: number | null, status: BenchmarkRow['status']) {
   if (timeMs === null) return '—'
   if (timeMs < 1) return '<1 ms'
   return `${timeMs.toFixed(1)} ms`
-}
-
-function runCase(algorithm: SortAlgorithm, dataset: DatasetType, size: number): BenchmarkRow {
-  // Avoid locking the tab for quadratic work that is not useful to wait on at 50,000 items.
-  if (size === 50000 && algorithm !== 'merge') {
-    return { algorithm, dataset, size, timeMs: null, status: 'limit' }
-  }
-  const values = generateDataset(size, dataset)
-  const started = performance.now()
-  const sorted = SORT_FUNCTIONS[algorithm](values)
-  const timeMs = performance.now() - started
-  if (!isSorted(sorted)) throw new Error(`${ALGORITHM_LABELS[algorithm]} returned an unsorted result`)
-  return { algorithm, dataset, size, timeMs, status: 'measured' }
 }
 
 function SortingAlgorithmTool({ onBack }: SortingAlgorithmToolProps) {
@@ -60,18 +44,11 @@ function SortingAlgorithmTool({ onBack }: SortingAlgorithmToolProps) {
     setError('')
     setResults([])
     setProgress(0)
-    const nextResults: BenchmarkRow[] = []
     try {
-      for (const algorithm of SORT_ALGORITHMS) {
-        for (const dataset of DATASET_TYPES) {
-          for (const size of DATASET_SIZES) {
-            nextResults.push(runCase(algorithm, dataset, size))
-            setResults([...nextResults])
-            setProgress(nextResults.length / CASE_COUNT * 100)
-            await new Promise<void>((resolve) => setTimeout(resolve, 0))
-          }
-        }
-      }
+      setProgress(10)
+      const benchmarkResults = await runSortingBenchmarksAPI()
+      setResults(benchmarkResults)
+      setProgress(100)
     } catch (benchmarkError) {
       setError(benchmarkError instanceof Error ? benchmarkError.message : 'The benchmark could not be completed.')
     } finally {
