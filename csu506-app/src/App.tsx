@@ -3,14 +3,17 @@ import './App.css'
 import DataStructureTool from './DataStructureTool'
 import Project1Requirements from './Project1Requirements'
 import Project2Requirements from './Project2Requirements'
+import Project3Requirements from './Project3Requirements'
 import SearchAlgorithmTool from './SearchAlgorithmTool'
+import SortingAlgorithmTool from './SortingAlgorithmTool'
 
 type Project = { number: string; title: string; course: string; status: 'Completed' | 'In Progress' | 'Placeholder'; description: string; progress: number }
 
 const projects: Project[] = [
   { number: '01', title: 'Data Structure Learning Tool', course: 'CSU 506 • Project 01', status: 'Completed', description: 'Explore stacks, queues, and linked lists through interactive operations and complexity analysis.', progress: 100 },
   { number: '02', title: 'Algorithm Comparison Tool', course: 'CSU 506 • Project 02', status: 'In Progress', description: 'Compare linear and binary search algorithms with real-time performance analysis.', progress: 80 },
-  ...Array.from({ length: 6 }, (_, index) => ({ number: String(index + 3).padStart(2, '0'), title: 'Project placeholder', course: `CSU 506 • Project ${String(index + 3).padStart(2, '0')}`, status: 'Placeholder' as const, description: 'Requirements and solution notes will live here when this project is ready.', progress: 0 })),
+  { number: '03', title: 'Sorting Performance Lab', course: 'CSU 506 • Project 03', status: 'In Progress', description: 'Measure bubble, selection, insertion, and merge sort across four dataset shapes.', progress: 100 },
+  ...Array.from({ length: 5 }, (_, index) => ({ number: String(index + 4).padStart(2, '0'), title: 'Project placeholder', course: `CSU 506 • Project ${String(index + 4).padStart(2, '0')}`, status: 'Placeholder' as const, description: 'Requirements and solution notes will live here when this project is ready.', progress: 0 })),
 ]
 
 function App() {
@@ -24,10 +27,12 @@ function App() {
   if (view === 'requirements') {
     if (activeProject === '01') return <Project1Requirements onBack={() => setView('dashboard')} onOpenTool={() => setView('tool')} />
     if (activeProject === '02') return <Project2Requirements onBack={() => setView('dashboard')} onOpenTool={() => setView('tool')} />
+    if (activeProject === '03') return <Project3Requirements onBack={() => setView('dashboard')} onOpenTool={() => setView('tool')} />
   }
   if (view === 'tool') {
     if (activeProject === '01') return <DataStructureTool onBack={() => setView('requirements')} />
     if (activeProject === '02') return <SearchAlgorithmTool onBack={() => setView('requirements')} />
+    if (activeProject === '03') return <SortingAlgorithmTool onBack={() => setView('requirements')} />
   }
 
   return (
