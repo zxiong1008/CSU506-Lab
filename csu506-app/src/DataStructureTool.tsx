@@ -53,7 +53,7 @@ function runBenchmark(structure: Structure): BenchmarkResult[] {
   })
 }
 
-function DataStructureTool({ onBack, projectNumber = '01' }: { onBack: () => void; projectNumber?: string }) {
+function DataStructureTool({ onBack }: { onBack: () => void }) {
   const [module, setModule] = useState(1)
   const [structure, setStructure] = useState<Structure>('Stack')
   const [items, setItems] = useState(starterItems.Stack)
@@ -101,7 +101,7 @@ function DataStructureTool({ onBack, projectNumber = '01' }: { onBack: () => voi
     <div className="tool-page">
       <header className="tool-topbar">
         <button className="back-link" type="button" onClick={onBack}>← Requirements</button>
-        <span className="tool-course">CSU 506 <b>•</b> PROJECT {projectNumber}</span>
+        <span className="tool-course">CSU 506 <b>•</b> PROJECT 01</span>
       </header>
       <div className="tool-heading"><div><p className="eyebrow">DATA STRUCTURES &amp; ALGORITHMS</p><h1>Data Structure<br /><em>Learning Tool</em><span>.</span></h1><p>Understand the trade-offs behind everyday operations by experimenting with each structure.</p></div><div className="tool-index"><strong>0{module}</strong><span>of 03<br />learning modules</span></div></div>
       <main className="tool-content">
