@@ -5,6 +5,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const API_PROJECT2_URL = `${API_BASE_URL}/api/project2`
 const API_PROJECT3_URL = `${API_BASE_URL}/api/project3`
+const API_PROJECT4_URL = `${API_BASE_URL}/api/project4`
 
 export interface SearchResult {
   found: boolean
@@ -29,6 +30,17 @@ export interface SortingBenchmarkResult {
   timeMs: number | null
   status: 'measured' | 'limit'
 }
+
+export interface LinearStructureBenchmark {
+  timeMs: number
+  complexity: string
+  operations: Record<string, {
+    timeMs: number
+    complexity: string
+  }>
+}
+
+export type LinearStructureBenchmarks = Record<string, LinearStructureBenchmark>
 
 export async function linearSearchAPI(searchValue: number, arraySize: number = 100): Promise<SearchResult> {
   try {
@@ -115,6 +127,13 @@ export async function healthCheckAPI(): Promise<boolean> {
 export async function runSortingBenchmarksAPI(): Promise<SortingBenchmarkResult[]> {
   const response = await fetch(`${API_PROJECT3_URL}/benchmarks`)
   if (!response.ok) throw new Error(`Sorting API Error: ${response.status}`)
+  const data = await response.json()
+  return data.benchmarks
+}
+
+export async function runLinearStructureBenchmarksAPI(size: number = 10000): Promise<LinearStructureBenchmarks> {
+  const response = await fetch(`${API_PROJECT4_URL}/benchmarks?size=${size}`)
+  if (!response.ok) throw new Error(`Data structure API Error: ${response.status}`)
   const data = await response.json()
   return data.benchmarks
 }

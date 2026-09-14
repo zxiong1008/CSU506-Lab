@@ -3,6 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 import time
 from typing import List, Dict, Any, Callable
 
+from data_structures import (
+    are_delimiters_balanced,
+    benchmark_operations,
+    is_palindrome,
+    remove_duplicates,
+    round_robin_schedule,
+)
+
 app = FastAPI(
     title="CSU 506 Algorithms API",
     description="Search and sorting algorithm comparison API",
@@ -247,7 +255,34 @@ def benchmark_sort(algorithm: str, dataset_type: str, size: int) -> Dict[str, An
     }
 
 
-# API Routes with /api/project2 and /api/project3 prefixes
+# API Routes with /api/project2, /api/project3, and /api/project4 prefixes
+
+
+@app.get("/api/project4/health")
+async def linear_structures_health_check():
+    """Health check endpoint for the Project 4 linear structures service."""
+    return {"status": "healthy", "service": "CSU 506 Project 4 Linear Structures API"}
+
+
+@app.get("/api/project4/examples")
+async def linear_structures_examples():
+    """Run the four Project 4 problem-solving examples."""
+    return {
+        "examples": {
+            "balancedDelimiters": are_delimiters_balanced("{[()]}") ,
+            "roundRobin": round_robin_schedule(["A", "B", "C"], 4),
+            "palindrome": is_palindrome("A man, a plan, a canal: Panama"),
+            "uniqueValues": remove_duplicates([3, 1, 3, 2, 1]),
+        }
+    }
+
+
+@app.get("/api/project4/benchmarks")
+async def linear_structures_benchmarks(size: int = 1000):
+    """Measure representative operations for all four structures."""
+    if size < 1 or size > 100000:
+        raise HTTPException(status_code=400, detail="Size must be between 1 and 100000")
+    return {"size": size, "benchmarks": benchmark_operations(size)}
 
 
 @app.get("/api/project3/health")

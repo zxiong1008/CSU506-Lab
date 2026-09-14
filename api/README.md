@@ -1,6 +1,16 @@
-# CSU 506 Project 2 - Python API with Docker
+# CSU 506 Projects 2-4 - Python API with Docker
 
-This folder contains a Python FastAPI backend for the Search Algorithm Comparison Tool. The API handles all algorithm operations and can be run in Docker.
+This folder contains a Python FastAPI backend for the search, sorting, and linear data structure tools. The APIs handle algorithm operations and can be run in Docker.
+
+## Project 4 linear structures
+
+Project 4 is implemented in `stack.py`, `queue.py`, `deque.py`, and `linked_list.py`. The shared examples and performance runner live in `data_structures.py`; run its tests with `python -m unittest test_data_structures.py` from this directory.
+
+Endpoints:
+
+- **GET** `/api/project4/health`
+- **GET** `/api/project4/examples`
+- **GET** `/api/project4/benchmarks?size=1000`
 
 ## 📋 API Endpoints
 
