@@ -6,6 +6,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const API_PROJECT2_URL = `${API_BASE_URL}/api/project2`
 const API_PROJECT3_URL = `${API_BASE_URL}/api/project3`
 const API_PROJECT4_URL = `${API_BASE_URL}/api/project4`
+const API_PROJECT5_URL = `${API_BASE_URL}/api/project5`
 
 export interface SearchResult {
   found: boolean
@@ -136,4 +137,10 @@ export async function runLinearStructureBenchmarksAPI(size: number = 10000): Pro
   if (!response.ok) throw new Error(`Data structure API Error: ${response.status}`)
   const data = await response.json()
   return data.benchmarks
+}
+
+export async function runProject5BenchmarksAPI(size: number = 200): Promise<Record<string, unknown>> {
+  const response = await fetch(`${API_PROJECT5_URL}/benchmarks?size=${size}`)
+  if (!response.ok) throw new Error(`Project 5 API Error: ${response.status}`)
+  return response.json()
 }

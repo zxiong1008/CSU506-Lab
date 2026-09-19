@@ -11,6 +11,8 @@ from data_structures import (
     remove_duplicates,
     round_robin_schedule,
 )
+from hash_table import HashTable
+from priority_queue import PriorityQueue, compare_hash_table_vs_linear_search
 
 
 class DataStructureTests(unittest.TestCase):
@@ -51,6 +53,38 @@ class DataStructureTests(unittest.TestCase):
         measurements = benchmark_operations(20)
         self.assertEqual(set(measurements), {"Stack", "Queue", "Deque", "Linked list"})
         self.assertTrue(all("timeMs" in result and "complexity" in result for result in measurements.values()))
+
+    def test_hash_table_handles_collisions_and_lookup(self):
+        table = HashTable(capacity=11)
+        table.insert("apple", 10)
+        table.insert("banana", 20)
+        table.insert("orange", 30)
+        table.insert("grape", 40)
+        self.assertEqual(table.search("banana"), 20)
+        self.assertEqual(table.get("orange"), 30)
+        self.assertTrue(table.contains("apple"))
+        table.delete("banana")
+        self.assertIsNone(table.get("banana"))
+        self.assertEqual(table.size, 3)
+
+    def test_priority_queue_heap_behavior(self):
+        queue = PriorityQueue()
+        queue.insert("low", 2)
+        queue.insert("high", 9)
+        queue.insert("mid", 5)
+        self.assertEqual(queue.peek(), ("high", 9))
+        self.assertEqual(queue.extract_max(), ("high", 9))
+        self.assertEqual(queue.extract_max(), ("mid", 5))
+        self.assertTrue(queue.search("low"))
+        self.assertTrue(queue.delete("low"))
+
+    def test_hash_table_search_performance_beats_linear_search(self):
+        report = compare_hash_table_vs_linear_search(200)
+        self.assertIn("hash_table", report)
+        self.assertIn("linear_search", report)
+        self.assertIn("speedup", report)
+        self.assertGreater(report["hash_table"]["time_ms"], 0)
+        self.assertGreater(report["linear_search"]["time_ms"], 0)
 
 
 if __name__ == "__main__":

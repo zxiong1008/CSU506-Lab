@@ -10,6 +10,8 @@ from data_structures import (
     remove_duplicates,
     round_robin_schedule,
 )
+from hash_table import compare_hash_table_vs_linear_search
+from priority_queue import PriorityQueue
 
 app = FastAPI(
     title="CSU 506 Algorithms API",
@@ -255,7 +257,35 @@ def benchmark_sort(algorithm: str, dataset_type: str, size: int) -> Dict[str, An
     }
 
 
-# API Routes with /api/project2, /api/project3, and /api/project4 prefixes
+# API Routes with /api/project2, /api/project3, /api/project4, and /api/project5 prefixes
+
+
+@app.get("/api/project5/health")
+async def project5_health_check():
+    """Health check endpoint for the Project 5 hash table and priority queue service."""
+    return {"status": "healthy", "service": "CSU 506 Project 5 Hash Table & Priority Queue API"}
+
+
+@app.get("/api/project5/benchmarks")
+async def project5_benchmarks(size: int = 200):
+    """Return the hash table vs. linear search performance comparison for Project 5."""
+    if size < 1 or size > 1000:
+        raise HTTPException(status_code=400, detail="Size must be between 1 and 1000")
+    return {"size": size, "benchmarks": compare_hash_table_vs_linear_search(size)}
+
+
+@app.get("/api/project5/priority-queue")
+async def project5_priority_queue_demo():
+    """Return a tiny priority-queue demo payload for the Project 5 UI."""
+    queue = PriorityQueue()
+    queue.insert("submission", 60)
+    queue.insert("analysis", 90)
+    queue.insert("review", 75)
+    return {
+        "peek": queue.peek(),
+        "extract_max": queue.extract_max(),
+        "queue_size": len(queue),
+    }
 
 
 @app.get("/api/project4/health")

@@ -6,6 +6,8 @@ import Project2Requirements from './Project2Requirements'
 import Project3Requirements from './Project3Requirements'
 import Project4Requirements from './Project4Requirements'
 import Project4Tool from './Project4Tool'
+import Project5Requirements from './Project5Requirements'
+import Project5Tool from './Project5Tool'
 import SearchAlgorithmTool from './SearchAlgorithmTool'
 import SortingAlgorithmTool from './SortingAlgorithmTool'
 
@@ -16,7 +18,8 @@ const projects: Project[] = [
   { number: '02', title: 'Algorithm Comparison Tool', course: 'CSU 506 • Project 02', status: 'In Progress', description: 'Compare linear and binary search algorithms with real-time performance analysis.', progress: 80 },
   { number: '03', title: 'Sorting Performance Lab', course: 'CSU 506 • Project 03', status: 'In Progress', description: 'Measure bubble, selection, insertion, and merge sort across four dataset shapes.', progress: 100 },
   { number: '04', title: 'Linear Data Structure Lab', course: 'CSU 506 • Project 04', status: 'Completed', description: 'Implement stacks, queues, deques, and linked lists with practical algorithms and performance notes.', progress: 100 },
-  ...Array.from({ length: 4 }, (_, index) => ({ number: String(index + 5).padStart(2, '0'), title: 'Project placeholder', course: `CSU 506 • Project ${String(index + 5).padStart(2, '0')}`, status: 'Placeholder' as const, description: 'Requirements and solution notes will live here when this project is ready.', progress: 0 })),
+  { number: '05', title: 'Hash Table & Priority Queue Lab', course: 'CSU 506 • Project 05', status: 'Completed', description: 'Build a hash table for direct lookup and a max-heap priority queue for fast priority selection.', progress: 100 },
+  ...Array.from({ length: 3 }, (_, index) => ({ number: String(index + 6).padStart(2, '0'), title: 'Project placeholder', course: `CSU 506 • Project ${String(index + 6).padStart(2, '0')}`, status: 'Placeholder' as const, description: 'Requirements and solution notes will live here when this project is ready.', progress: 0 })),
 ]
 
 function App() {
@@ -32,12 +35,14 @@ function App() {
     if (activeProject === '02') return <Project2Requirements onBack={() => setView('dashboard')} onOpenTool={() => setView('tool')} />
     if (activeProject === '03') return <Project3Requirements onBack={() => setView('dashboard')} onOpenTool={() => setView('tool')} />
     if (activeProject === '04') return <Project4Requirements onBack={() => setView('dashboard')} onOpenTool={() => setView('tool')} />
+    if (activeProject === '05') return <Project5Requirements onBack={() => setView('dashboard')} onOpenTool={() => setView('tool')} />
   }
   if (view === 'tool') {
     if (activeProject === '01') return <DataStructureTool onBack={() => setView('requirements')} />
     if (activeProject === '02') return <SearchAlgorithmTool onBack={() => setView('requirements')} />
     if (activeProject === '03') return <SortingAlgorithmTool onBack={() => setView('requirements')} />
     if (activeProject === '04') return <Project4Tool onBack={() => setView('requirements')} />
+    if (activeProject === '05') return <Project5Tool onBack={() => setView('requirements')} />
   }
 
   return (
