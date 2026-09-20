@@ -64,6 +64,17 @@ class DemoPriorityQueue {
     this.heap.sort((left, right) => right[1] - left[1])
   }
 
+  search(task: string) {
+    return this.heap.some(([currentTask]) => currentTask === task)
+  }
+
+  delete(task: string) {
+    const nextHeap = this.heap.filter(([currentTask]) => currentTask !== task)
+    const deleted = nextHeap.length !== this.heap.length
+    this.heap = nextHeap
+    return deleted
+  }
+
   peek() {
     if (!this.heap.length) return null
     return this.heap[0]
@@ -72,6 +83,15 @@ class DemoPriorityQueue {
   extractMax() {
     if (!this.heap.length) return null
     const [task, priority] = this.heap.shift()!
+    return { task, priority }
+  }
+
+  extractMin() {
+    if (!this.heap.length) return null
+    const minimum = this.heap.reduce((best, current) => current[1] < best[1] ? current : best, this.heap[0])
+    const index = this.heap.findIndex(([task, priority]) => task === minimum[0] && priority === minimum[1])
+    if (index < 0) return null
+    const [task, priority] = this.heap.splice(index, 1)[0]
     return { task, priority }
   }
 
@@ -133,7 +153,20 @@ function Project5Tool({ onBack }: { onBack: () => void }) {
     queue.items().forEach(([task, priority]) => nextQueue.insert(task, priority))
     nextQueue.insert(keyInput.trim(), Number.isFinite(priorityValue) ? priorityValue : 0)
     setQueue(nextQueue)
-    setMessage(`Queued ${keyInput.trim()} at priority ${Number.isFinite(priorityValue) ? priorityValue : 0}.`)
+    setMessage(`Inserted ${keyInput.trim()} at priority ${Number.isFinite(priorityValue) ? priorityValue : 0}.`)
+  }
+
+  function searchQueueEntry() {
+    const found = queue.search(keyInput.trim())
+    setMessage(found ? `${keyInput.trim()} is present in the priority queue.` : `${keyInput.trim()} was not found in the priority queue.`)
+  }
+
+  function deleteQueueEntry() {
+    const nextQueue = new DemoPriorityQueue()
+    queue.items().forEach(([task, priority]) => nextQueue.insert(task, priority))
+    const removed = nextQueue.delete(keyInput.trim())
+    setQueue(nextQueue)
+    setMessage(removed ? `${keyInput.trim()} was removed from the priority queue.` : `${keyInput.trim()} was not in the priority queue.`)
   }
 
   function popQueueEntry() {
@@ -141,7 +174,15 @@ function Project5Tool({ onBack }: { onBack: () => void }) {
     queue.items().forEach(([task, priority]) => nextQueue.insert(task, priority))
     const entry = nextQueue.extractMax()
     setQueue(nextQueue)
-    setMessage(entry ? `Dispatched ${entry.task} with priority ${entry.priority}.` : 'The priority queue is empty.')
+    setMessage(entry ? `Extracted max: ${entry.task} with priority ${entry.priority}.` : 'The priority queue is empty.')
+  }
+
+  function popMinQueueEntry() {
+    const nextQueue = new DemoPriorityQueue()
+    queue.items().forEach(([task, priority]) => nextQueue.insert(task, priority))
+    const entry = nextQueue.extractMin()
+    setQueue(nextQueue)
+    setMessage(entry ? `Extracted min: ${entry.task} with priority ${entry.priority}.` : 'The priority queue is empty.')
   }
 
   async function loadBenchmarks() {
@@ -213,8 +254,11 @@ function Project5Tool({ onBack }: { onBack: () => void }) {
                 </>
               ) : (
                 <>
-                  <button type="button" onClick={addQueueEntry}>Queue</button>
-                  <button type="button" className="secondary" onClick={popQueueEntry}>Dispatch</button>
+                  <button type="button" onClick={addQueueEntry}>Insert</button>
+                  <button type="button" className="secondary" onClick={searchQueueEntry}>Search</button>
+                  <button type="button" className="secondary" onClick={deleteQueueEntry}>Delete</button>
+                  <button type="button" className="secondary" onClick={popQueueEntry}>Extract max</button>
+                  <button type="button" className="secondary" onClick={popMinQueueEntry}>Extract min</button>
                 </>
               )}
             </div>
