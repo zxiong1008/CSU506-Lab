@@ -65,6 +65,7 @@ function Project6Tool({ onBack }: { onBack: () => void }) {
   const [mapKey, setMapKey] = useState('student-01')
   const [mapValue, setMapValue] = useState('new value')
   const [benchmarks, setBenchmarks] = useState<TreeBenchmark[]>([])
+  const [treeZoom, setTreeZoom] = useState(1)
   const [message, setMessage] = useState('Loading the 50-item sample dataset…')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -209,8 +210,8 @@ function Project6Tool({ onBack }: { onBack: () => void }) {
 
         {mode === 'tree' ? <>
           <section className="project6-panel project6-visual-panel">
-            <div className="project6-section-heading"><div><span>STRUCTURE VIEW</span><h2>Tree after operations</h2></div><small>Scrollable · edges show parent-child links</small></div>
-            <div className="project6-tree-scroll"><svg role="img" aria-label="Binary search tree visualization" width={layout.width} height={layout.height} viewBox={`0 0 ${layout.width} ${layout.height}`}>
+            <div className="project6-section-heading"><div><span>STRUCTURE VIEW</span><h2>Tree after operations</h2></div><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><small>Zoom</small><button type="button" aria-label="Zoom out" title="Zoom out" onClick={() => setTreeZoom((current) => Math.max(0.6, Number((current - 0.2).toFixed(1))))}>−</button><output aria-label="Current zoom">{Math.round(treeZoom * 100)}%</output><button type="button" aria-label="Zoom in" title="Zoom in" onClick={() => setTreeZoom((current) => Math.min(2, Number((current + 0.2).toFixed(1))))}>+</button><button type="button" aria-label="Reset zoom" title="Reset zoom" onClick={() => setTreeZoom(1)}>Reset</button></div></div>
+            <div className="project6-tree-scroll"><svg role="img" aria-label="Binary search tree visualization" width="100%" height="auto" viewBox={`0 0 ${layout.width} ${layout.height}`} style={{ transform: `scale(${treeZoom})`, transformOrigin: 'top center' }}>
               <title>Current binary search tree</title>
               {layout.edges.map(({ from, to }) => <line key={`${from.id}-${to.id}`} x1={from.x} y1={from.y} x2={to.x} y2={to.y} className="project6-edge" />)}
               {layout.nodes.map(({ node, x, y, id }) => <g key={id}><circle cx={x} cy={y} r="22" className="project6-node" /><text x={x} y={y + 4} textAnchor="middle" className="project6-node-label">{node.value}</text></g>)}
