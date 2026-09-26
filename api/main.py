@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import time
 from typing import List, Dict, Any, Callable
@@ -12,6 +12,9 @@ from data_structures import (
 )
 from hash_table import compare_hash_table_vs_linear_search
 from priority_queue import PriorityQueue
+from binary_search_tree import BinarySearchTree
+from tree_map import TreeMap
+from project6 import compare_tree_map_vs_list, demo_data, map_snapshot, tree_snapshot
 
 app = FastAPI(
     title="CSU 506 Algorithms API",
@@ -264,6 +267,76 @@ def benchmark_sort(algorithm: str, dataset_type: str, size: int) -> Dict[str, An
 async def project5_health_check():
     """Health check endpoint for the Project 5 hash table and priority queue service."""
     return {"status": "healthy", "service": "CSU 506 Project 5 Hash Table & Priority Queue API"}
+
+
+@app.get("/api/project6/health")
+async def project6_health_check():
+    return {"status": "healthy", "service": "CSU 506 Project 6 BST & Tree Map API"}
+
+
+@app.get("/api/project6/demo")
+async def project6_demo():
+    """Provide a repeatable 50-key BST and heterogeneous 50-entry map dataset."""
+    return demo_data()
+
+
+@app.post("/api/project6/tree/operation")
+async def project6_tree_operation(payload: dict[str, Any] = Body(...)):
+    """Apply one BST operation to the submitted keys and return the full tree state."""
+    values = payload.get("values", [])
+    operation = payload.get("operation")
+    value = payload.get("value")
+    if not isinstance(values, list) or len(values) > 500:
+        raise HTTPException(status_code=400, detail="values must be a list of at most 500 numbers")
+    if any(not isinstance(item, (int, float)) or isinstance(item, bool) for item in values):
+        raise HTTPException(status_code=400, detail="BST values must be numbers")
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        raise HTTPException(status_code=400, detail="value must be a number")
+    if operation not in {"insert", "search", "delete"}:
+        raise HTTPException(status_code=400, detail="operation must be insert, search, or delete")
+    tree = BinarySearchTree(values)
+    try:
+        result = tree.insert(value) if operation == "insert" else tree.search(value) if operation == "search" else tree.delete(value)
+    except TypeError as error:
+        raise HTTPException(status_code=400, detail="All BST values must be mutually comparable") from error
+    return {"operation": operation, "value": value, "result": result, **tree_snapshot(tree)}
+
+
+@app.post("/api/project6/map/operation")
+async def project6_map_operation(payload: dict[str, Any] = Body(...)):
+    """Apply one map operation to submitted entries; keys are strings, values may vary in type."""
+    entries = payload.get("entries", [])
+    operation = payload.get("operation")
+    key = payload.get("key")
+    if not isinstance(entries, list) or len(entries) > 500:
+        raise HTTPException(status_code=400, detail="entries must be a list of at most 500 key-value pairs")
+    if any(not isinstance(entry, dict) or not isinstance(entry.get("key"), str) or "value" not in entry for entry in entries):
+        raise HTTPException(status_code=400, detail="Each entry must contain a string key and a value")
+    if not isinstance(key, str) or not key:
+        raise HTTPException(status_code=400, detail="key must be a non-empty string")
+    if operation not in {"insert", "search", "delete"}:
+        raise HTTPException(status_code=400, detail="operation must be insert, search, or delete")
+    tree_map = TreeMap((entry["key"], entry["value"]) for entry in entries)
+    if operation == "insert":
+        result = tree_map.put(key, payload.get("value"))
+        found = True
+    elif operation == "search":
+        found = tree_map.contains(key)
+        result = tree_map.get(key)
+    else:
+        found = tree_map.delete(key)
+        result = found
+    return {"operation": operation, "key": key, "found": found, "result": result, **map_snapshot(tree_map)}
+
+
+@app.get("/api/project6/benchmarks")
+async def project6_benchmarks(searches: int = 100):
+    """Compare successful lookup performance at increasing map sizes."""
+    try:
+        results = [compare_tree_map_vs_list(size, searches) for size in (50, 200, 1000)]
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    return {"benchmarks": results}
 
 
 @app.get("/api/project5/benchmarks")

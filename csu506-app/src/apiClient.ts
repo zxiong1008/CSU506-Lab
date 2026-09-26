@@ -7,6 +7,7 @@ const API_PROJECT2_URL = `${API_BASE_URL}/api/project2`
 const API_PROJECT3_URL = `${API_BASE_URL}/api/project3`
 const API_PROJECT4_URL = `${API_BASE_URL}/api/project4`
 const API_PROJECT5_URL = `${API_BASE_URL}/api/project5`
+const API_PROJECT6_URL = `${API_BASE_URL}/api/project6`
 
 export interface SearchResult {
   found: boolean
@@ -42,6 +43,82 @@ export interface LinearStructureBenchmark {
 }
 
 export type LinearStructureBenchmarks = Record<string, LinearStructureBenchmark>
+
+export interface TreeNodeData {
+  value: number | string
+  left: TreeNodeData | null
+  right: TreeNodeData | null
+}
+
+export interface TreeDemoData {
+  treeValues: number[]
+  mapEntries: Array<{ key: string; value: unknown }>
+}
+
+export interface TreeBenchmark {
+  size: number
+  searches: number
+  target: number
+  treeMapTimeMs: number
+  listMapTimeMs: number
+  treeMapComplexity: string
+  listMapComplexity: string
+  listComparisonsPerSearch: number
+  treeHeight: number
+  speedup: number | null
+}
+
+export interface TreeOperationResult {
+  operation: string
+  value?: number
+  key?: string
+  result: unknown
+  found?: boolean
+  root: TreeNodeData | null
+  size: number
+  height: number
+  balanced: boolean
+  minimum: number | string | null
+  maximum: number | string | null
+  inorder?: number[]
+  preorder?: number[]
+  postorder?: number[]
+  entries?: Array<{ key: string; value: unknown }>
+}
+
+async function project6Request<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`${API_PROJECT6_URL}${path}`, {
+    ...init,
+    headers: { 'Content-Type': 'application/json', ...init?.headers },
+  })
+  if (!response.ok) {
+    const body = await response.json().catch(() => null)
+    throw new Error(body?.detail ?? `Project 6 API Error: ${response.status}`)
+  }
+  return response.json() as Promise<T>
+}
+
+export function getProject6DemoAPI(): Promise<TreeDemoData> {
+  return project6Request('/demo')
+}
+
+export function runTreeOperationAPI(values: number[], operation: 'insert' | 'search' | 'delete', value: number): Promise<TreeOperationResult> {
+  return project6Request('/tree/operation', { method: 'POST', body: JSON.stringify({ values, operation, value }) })
+}
+
+export function runTreeMapOperationAPI(
+  entries: Array<{ key: string; value: unknown }>,
+  operation: 'insert' | 'search' | 'delete',
+  key: string,
+  value?: unknown,
+): Promise<TreeOperationResult> {
+  return project6Request('/map/operation', { method: 'POST', body: JSON.stringify({ entries, operation, key, value }) })
+}
+
+export async function runProject6BenchmarksAPI(): Promise<TreeBenchmark[]> {
+  const data = await project6Request<{ benchmarks: TreeBenchmark[] }>('/benchmarks')
+  return data.benchmarks
+}
 
 export async function linearSearchAPI(searchValue: number, arraySize: number = 100): Promise<SearchResult> {
   try {
