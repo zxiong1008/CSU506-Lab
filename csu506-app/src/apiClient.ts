@@ -8,6 +8,7 @@ const API_PROJECT3_URL = `${API_BASE_URL}/api/project3`
 const API_PROJECT4_URL = `${API_BASE_URL}/api/project4`
 const API_PROJECT5_URL = `${API_BASE_URL}/api/project5`
 const API_PROJECT6_URL = `${API_BASE_URL}/api/project6`
+const API_PROJECT7_URL = `${API_BASE_URL}/api/project7`
 
 export interface SearchResult {
   found: boolean
@@ -84,6 +85,82 @@ export interface TreeOperationResult {
   preorder?: number[]
   postorder?: number[]
   entries?: Array<{ key: string; value: unknown }>
+}
+
+export type GraphRepresentation = 'matrix' | 'list'
+export type GraphEdge = { source: string; target: string; weight: number }
+export type GraphState = {
+  representation: GraphRepresentation
+  directed: boolean
+  vertices: string[]
+  edges: GraphEdge[]
+  adjacency?: Record<string, Record<string, number>>
+  matrix?: Array<Array<number | null>>
+  vertexCount: number
+  edgeCount: number
+  complexities: Record<string, string>
+}
+export type GraphTraceStep = {
+  action: string
+  vertex: string
+  from?: string
+  distance?: number
+  frontier?: string[]
+  visited?: string[]
+}
+export type GraphAlgorithmResult = GraphState & {
+  algorithm: 'bfs' | 'dfs' | 'dijkstra'
+  order?: string[]
+  path?: string[]
+  distance?: number | null
+  found?: boolean
+  steps: GraphTraceStep[]
+}
+export type GraphDemoData = { vertices: string[]; edges: GraphEdge[]; directed: boolean }
+
+async function project7Request<T>(path: string, payload?: Record<string, unknown>): Promise<T> {
+  const response = await fetch(`${API_PROJECT7_URL}${path}`, {
+    method: payload ? 'POST' : 'GET',
+    headers: payload ? { 'Content-Type': 'application/json' } : undefined,
+    body: payload ? JSON.stringify(payload) : undefined,
+  })
+  if (!response.ok) {
+    const body = await response.json().catch(() => null)
+    throw new Error(body?.detail ?? `Project 7 API Error: ${response.status}`)
+  }
+  return response.json() as Promise<T>
+}
+
+export function getProject7DemoAPI(): Promise<GraphDemoData> {
+  return project7Request('/demo')
+}
+
+export function getGraphStateAPI(vertices: string[], edges: GraphEdge[], representation: GraphRepresentation, directed: boolean): Promise<GraphState> {
+  return project7Request('/state', { vertices, edges, representation, directed })
+}
+
+export function runGraphOperationAPI(
+  graph: Pick<GraphState, 'vertices' | 'edges' | 'representation' | 'directed'>,
+  operation: 'add_vertex' | 'remove_vertex' | 'add_edge' | 'remove_edge',
+  values: { vertex?: string; source?: string; target?: string; weight?: number },
+): Promise<GraphState & { operation: string; result: boolean }> {
+  return project7Request('/operation', { ...graph, operation, ...values })
+}
+
+export function runGraphTraversalAPI(
+  graph: Pick<GraphState, 'vertices' | 'edges' | 'representation' | 'directed'>,
+  algorithm: 'bfs' | 'dfs',
+  start: string,
+): Promise<GraphAlgorithmResult> {
+  return project7Request('/traversal', { ...graph, algorithm, start })
+}
+
+export function runGraphShortestPathAPI(
+  graph: Pick<GraphState, 'vertices' | 'edges' | 'representation' | 'directed'>,
+  start: string,
+  destination: string,
+): Promise<GraphAlgorithmResult> {
+  return project7Request('/shortest-path', { ...graph, start, destination })
 }
 
 async function project6Request<T>(path: string, init?: RequestInit): Promise<T> {

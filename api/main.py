@@ -1,5 +1,6 @@
 from fastapi import Body, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+import math
 import time
 from typing import List, Dict, Any, Callable
 
@@ -15,6 +16,7 @@ from priority_queue import PriorityQueue
 from binary_search_tree import BinarySearchTree
 from tree_map import TreeMap
 from project6 import compare_tree_map_vs_list, demo_data, map_snapshot, tree_snapshot
+from project7 import build_graph, demo_data as project7_demo_data, graph_snapshot
 
 app = FastAPI(
     title="CSU 506 Algorithms API",
@@ -272,6 +274,89 @@ async def project5_health_check():
 @app.get("/api/project6/health")
 async def project6_health_check():
     return {"status": "healthy", "service": "CSU 506 Project 6 BST & Tree Map API"}
+
+
+@app.get("/api/project7/health")
+async def project7_health_check():
+    return {"status": "healthy", "service": "CSU 506 Project 7 Graph API"}
+
+
+@app.get("/api/project7/demo")
+async def project7_demo():
+    return project7_demo_data()
+
+
+@app.post("/api/project7/state")
+async def project7_state(payload: dict[str, Any] = Body(...)):
+    """Validate a graph and return a representation-specific structural snapshot."""
+    try:
+        graph, representation = build_graph(payload)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    return graph_snapshot(graph, representation, payload.get("directed", False))
+
+
+@app.post("/api/project7/operation")
+async def project7_operation(payload: dict[str, Any] = Body(...)):
+    """Apply a vertex or edge mutation to the supplied graph state."""
+    try:
+        graph, representation = build_graph(payload)
+        operation = payload.get("operation")
+        if operation in {"add_vertex", "remove_vertex"}:
+            vertex = payload.get("vertex")
+            if not isinstance(vertex, str) or not vertex.strip():
+                raise ValueError("vertex must be a non-empty string")
+            if operation == "add_vertex":
+                result = graph.add_vertex(vertex)
+            else:
+                result = graph.remove_vertex(vertex)
+        elif operation in {"add_edge", "remove_edge"}:
+            source, target = payload.get("source"), payload.get("target")
+            if not isinstance(source, str) or not isinstance(target, str):
+                raise ValueError("source and target must be vertex labels")
+            if operation == "add_edge":
+                weight = payload.get("weight", 1)
+                if not isinstance(weight, (int, float)) or isinstance(weight, bool) or (isinstance(weight, float) and not math.isfinite(weight)) or weight < 0:
+                    raise ValueError("edge weights must be finite non-negative numbers")
+                graph.add_edge(source, target, weight)
+                result = True
+            else:
+                result = graph.remove_edge(source, target)
+        else:
+            raise ValueError("operation must be add_vertex, remove_vertex, add_edge, or remove_edge")
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    return {"operation": operation, "result": result, **graph_snapshot(graph, representation, payload.get("directed", False))}
+
+
+@app.post("/api/project7/traversal")
+async def project7_traversal(payload: dict[str, Any] = Body(...)):
+    """Run BFS or DFS and return both visit order and an explanatory trace."""
+    try:
+        graph, representation = build_graph(payload)
+        algorithm, start = payload.get("algorithm"), payload.get("start")
+        if algorithm not in {"bfs", "dfs"}:
+            raise ValueError("algorithm must be bfs or dfs")
+        if not isinstance(start, str):
+            raise ValueError("start must be a vertex label")
+        traversal = graph.bfs(start) if algorithm == "bfs" else graph.dfs(start)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    return {"algorithm": algorithm, **traversal, **graph_snapshot(graph, representation, payload.get("directed", False))}
+
+
+@app.post("/api/project7/shortest-path")
+async def project7_shortest_path(payload: dict[str, Any] = Body(...)):
+    """Find a minimum-weight route with Dijkstra's algorithm (non-negative weights)."""
+    try:
+        graph, representation = build_graph(payload)
+        start, destination = payload.get("start"), payload.get("destination")
+        if not isinstance(start, str) or not isinstance(destination, str):
+            raise ValueError("start and destination must be vertex labels")
+        result = graph.shortest_path(start, destination)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    return {"algorithm": "dijkstra", **result, **graph_snapshot(graph, representation, payload.get("directed", False))}
 
 
 @app.get("/api/project6/demo")
