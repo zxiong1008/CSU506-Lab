@@ -11,6 +11,7 @@ from data_structures import (
     remove_duplicates,
     round_robin_schedule,
 )
+from final_portfolio import Set, bubble_sort_with_steps, portfolio_summary, quickselect
 from hash_table import compare_hash_table_vs_linear_search
 from priority_queue import PriorityQueue
 from binary_search_tree import BinarySearchTree
@@ -641,6 +642,59 @@ async def run_benchmarks():
     
     return {
         "benchmarks": results
+    }
+
+
+@app.get("/api/project8/health")
+async def project8_health_check():
+    """Health check endpoint for the final portfolio system."""
+    return {"status": "healthy", "service": "CSU 506 Final Portfolio API"}
+
+
+@app.get("/api/project8/summary")
+async def project8_summary():
+    """Return a short overview of the final portfolio concepts and coverage."""
+    return portfolio_summary()
+
+
+@app.post("/api/project8/bubble-sort")
+async def project8_bubble_sort(payload: dict[str, Any] = Body(...)):
+    values = payload.get("values", [])
+    if not isinstance(values, list) or not all(isinstance(item, (int, float)) for item in values):
+        raise HTTPException(status_code=400, detail="values must be a list of numbers")
+    sorted_values, steps = bubble_sort_with_steps([int(value) for value in values])
+    return {
+        "input": [int(value) for value in values],
+        "sorted": sorted_values,
+        "steps": steps,
+        "step_count": len(steps),
+    }
+
+
+@app.post("/api/project8/quickselect")
+async def project8_quickselect(payload: dict[str, Any] = Body(...)):
+    values = payload.get("values", [])
+    k = payload.get("k")
+    if not isinstance(values, list) or not all(isinstance(item, (int, float)) for item in values):
+        raise HTTPException(status_code=400, detail="values must be a list of numbers")
+    if not isinstance(k, int) or k < 1 or k > len(values):
+        raise HTTPException(status_code=400, detail="k must be an integer between 1 and the list length")
+    return {"value": quickselect([int(value) for value in values], k)}
+
+
+@app.post("/api/project8/set-operations")
+async def project8_set_operations(payload: dict[str, Any] = Body(...)):
+    left = payload.get("left", [])
+    right = payload.get("right", [])
+    if not isinstance(left, list) or not isinstance(right, list):
+        raise HTTPException(status_code=400, detail="left and right must be lists")
+    left_set = Set(left)
+    right_set = Set(right)
+    return {
+        "union": left_set.union(right_set).values,
+        "intersection": left_set.intersection(right_set).values,
+        "difference": left_set.difference(right_set).values,
+        "symmetric_difference": left_set.symmetric_difference(right_set).values,
     }
 
 

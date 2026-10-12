@@ -1,0 +1,12 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^cd c:/Users/admin/Desktop/CSUG/CSU506-Lab ; python -m unittest discover -s api -p \"test_final_portfolio\\.py\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd c:/Users/admin/Desktop/CSUG/CSU506-Lab/csu506-app ; npm run build$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

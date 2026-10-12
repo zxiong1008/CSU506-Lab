@@ -12,6 +12,7 @@ import Project6Requirements from './Project6Requirements'
 import Project6Tool from './Project6Tool'
 import Project7Requirements from './Project7Requirements'
 import Project7Tool from './Project7Tool'
+import PortfolioTool from './PortfolioTool'
 import SearchAlgorithmTool from './SearchAlgorithmTool'
 import SortingAlgorithmTool from './SortingAlgorithmTool'
 
@@ -25,7 +26,7 @@ const projects: Project[] = [
   { number: '05', title: 'Hash Table & Priority Queue Lab', course: 'CSU 506 • Project 05', status: 'Completed', description: 'Build a hash table for direct lookup and a max-heap priority queue for fast priority selection.', progress: 100 },
   { number: '06', title: 'Binary Search Tree & Map Lab', course: 'CSU 506 • Project 06', status: 'In Progress', description: 'Build, traverse, balance-check, and visualize a BST-backed map with live lookup benchmarks.', progress: 100 },
   { number: '07', title: 'Graph Systems & Algorithms', course: 'CSU 506 • Project 07', status: 'In Progress', description: 'Compare matrix and list graph storage, trace traversals, and find weighted shortest routes.', progress: 100 },
-  { number: '08', title: 'Project placeholder', course: 'CSU 506 • Project 08', status: 'Placeholder', description: 'Requirements and solution notes will live here when this project is ready.', progress: 0 },
+  { number: '08', title: 'Final Portfolio System', course: 'CSU 506 • Project 08', status: 'Completed', description: 'Integrate sets, sorting, selection, and all course data structures into one comprehensive portfolio dashboard.', progress: 100 },
 ]
 
 function App() {
@@ -44,6 +45,7 @@ function App() {
     if (activeProject === '05') return <Project5Requirements onBack={() => setView('dashboard')} onOpenTool={() => setView('tool')} />
     if (activeProject === '06') return <Project6Requirements onBack={() => setView('dashboard')} onOpenTool={() => setView('tool')} />
     if (activeProject === '07') return <Project7Requirements onBack={() => setView('dashboard')} onOpenTool={() => setView('tool')} />
+    if (activeProject === '08') return <PortfolioTool onBack={() => setView('dashboard')} />
   }
   if (view === 'tool') {
     if (activeProject === '01') return <DataStructureTool onBack={() => setView('requirements')} />
@@ -53,6 +55,7 @@ function App() {
     if (activeProject === '05') return <Project5Tool onBack={() => setView('requirements')} />
     if (activeProject === '06') return <Project6Tool onBack={() => setView('requirements')} />
     if (activeProject === '07') return <Project7Tool onBack={() => setView('requirements')} />
+    if (activeProject === '08') return <PortfolioTool onBack={() => setView('dashboard')} />
   }
 
   return (
